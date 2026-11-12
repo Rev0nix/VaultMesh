@@ -38,8 +38,8 @@ def test_register_login_and_rbac_flow():
         "/api/v1/auth/register",
         json={
             "email": "admin@vaultmesh.io",
-            "full_name": "Revanth Admin",
-            "password": "StrongPassword123!",
+            "full_name": "Revanth",
+            "password": "Strong123!",
             "organization_name": "VaultMesh Lab",
         },
     )
