@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+*.egg-info/
+.pytest_cache/
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment & Secrets (CRITICAL FOR SECURITY)
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+aws-credentials*
+
+# Node / Frontend
+node_modules/
+dist/
+build/
+.vite/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+
+# OS / IDE
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
