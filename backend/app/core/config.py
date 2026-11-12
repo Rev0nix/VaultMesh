@@ -3,12 +3,20 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     APP_NAME: str = "VaultMesh"
-    APP_VERSION: str = "0.1.0"
+    APP_VERSION: str = "0.2.0"
     APP_ENV: str = "development"
     API_V1_PREFIX: str = "/api/v1"
-    SECRET_KEY: str = "dev-insecure-secret-key-replace-in-prod"
+
+    # Security & JWT
+    SECRET_KEY: str = "dev-insecure-secret-key-replace-in-prod-minimum-32-chars"
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+
+    # Database
     DATABASE_URL: str = "sqlite:///./vaultmesh.db"
-    BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:5173"]
+
+    # CORS & AWS
+    BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
     AWS_INTEGRATION_MODE: str = "mock"
     AWS_DEFAULT_REGION: str = "ap-south-1"
 

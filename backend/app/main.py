@@ -1,7 +1,18 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from app.core.config import settings
 from app.api.v1.router import api_router
+from app.core.config import settings
+from app.core.database import Base, engine
+import app.models  # noqa: F401 - ensures all ORM tables register with Base.metadata
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Create database tables cleanly on application startup."""
+    Base.metadata.create_all(bind=engine)
+    yield
+
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -9,9 +20,9 @@ app = FastAPI(
     description="AWS Cloud Security Posture Management & Threat Detection Platform",
     openapi_url=f"{settings.API_V1_PREFIX}/openapi.json",
     docs_url=f"{settings.API_V1_PREFIX}/docs",
+    lifespan=lifespan,
 )
 
-# Restrict cross-origin requests strictly to our React frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.BACKEND_CORS_ORIGINS,
