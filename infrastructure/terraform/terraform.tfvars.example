@@ -1,5 +1,5 @@
 aws_region               = "ap-south-1"
 trusted_principal_arn    = "arn:aws:iam::123456789012:root"
-external_id              = "vm-ext-replace-with-generated-id"
+external_id              = ""
 enable_cloudtrail_bucket = false
 enable_cloudtrail        = false
