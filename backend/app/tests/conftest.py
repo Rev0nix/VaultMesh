@@ -4,7 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.api.deps import get_db
 from app.core.database import Base
-from app.main import app
+from app.main import app as fastapi_app
 import app.models  # noqa: F401
 
 SQLALCHEMY_TEST_DATABASE_URL = "sqlite:///./test_vaultmesh.db"
@@ -20,7 +20,7 @@ def override_get_db():
         db.close()
 
 
-app.dependency_overrides[get_db] = override_get_db
+fastapi_app.dependency_overrides[get_db] = override_get_db
 
 
 @pytest.fixture(autouse=True)
@@ -32,4 +32,4 @@ def setup_and_teardown_db():
 
 @pytest.fixture()
 def client():
-    return TestClient(app)
+    return TestClient(fastapi_app)

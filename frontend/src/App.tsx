@@ -5,6 +5,7 @@ import Sidebar from './components/Sidebar';
 import TopNavbar from './components/TopNavbar';
 import OverviewPage from './pages/OverviewPage';
 import CloudAccountsPage from './pages/CloudAccountsPage';
+import FindingsPage from './pages/FindingsPage';
 import ModulePlaceholderPage from './pages/ModulePlaceholderPage';
 import { accountsApi } from './services/api';
 import type { AWSAccount, NavSection } from './types';
@@ -49,7 +50,13 @@ function VaultMeshShell() {
   const renderSection = () => {
     switch (activeSection) {
       case 'overview':
-        return <OverviewPage onNavigate={setActiveSection} />;
+        return (
+          <OverviewPage
+            accounts={accounts}
+            selectedAccountId={selectedAccountId}
+            onNavigate={setActiveSection}
+          />
+        );
       case 'accounts':
         return (
           <CloudAccountsPage
@@ -59,10 +66,10 @@ function VaultMeshShell() {
         );
       case 'findings':
         return (
-          <ModulePlaceholderPage
-            title="Security Findings & Posture Engine"
-            stageNumber={6}
-            description="Inspect S3, IAM, EC2, Security Group, EBS, and CloudTrail vulnerabilities with evidence and status workflows."
+          <FindingsPage
+            accounts={accounts}
+            selectedAccountId={selectedAccountId}
+            globalSearch={searchQuery}
           />
         );
       case 'threats':

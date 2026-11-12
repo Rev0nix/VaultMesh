@@ -1,5 +1,9 @@
 export type UserRole = 'ADMIN' | 'SECURITY_ANALYST' | 'VIEWER';
 
+export type SeverityLevel = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'INFO';
+
+export type FindingStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'RISK_ACCEPTED';
+
 export type NavSection =
   | 'overview'
   | 'accounts'
@@ -57,6 +61,48 @@ export interface ConnectionValidation {
   caller_arn: string;
   message: string;
   validated_at: string;
+}
+
+export interface ScanJob {
+  id: number;
+  aws_account_id: number;
+  status: string;
+  regions_scanned: string[];
+  resources_scanned: number;
+  findings_count: number;
+  security_score: number;
+  is_mock: boolean;
+  started_at: string;
+  completed_at: string | null;
+}
+
+export interface Finding {
+  id: number;
+  finding_uid: string;
+  scan_job_id: number;
+  rule_id: string;
+  title: string;
+  description: string;
+  severity: SeverityLevel;
+  status: FindingStatus;
+  evidence: Record<string, unknown>;
+  remediation_summary: string;
+  remediation_cli: string | null;
+  remediation_terraform: string | null;
+  aws_doc_url: string | null;
+  investigation_notes: string | null;
+  is_mock: boolean;
+  detected_at: string;
+  updated_at: string;
+  resource: {
+    id: number;
+    resource_arn: string;
+    resource_id: string;
+    resource_name: string | null;
+    service: string;
+    resource_type: string;
+    region: string;
+  };
 }
 
 export interface DashboardOverview {

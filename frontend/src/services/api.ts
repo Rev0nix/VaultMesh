@@ -2,6 +2,9 @@ import type {
   AWSAccount,
   ConnectionValidation,
   DashboardOverview,
+  Finding,
+  FindingStatus,
+  ScanJob,
   TokenResponse,
   User,
 } from '../types';
@@ -108,4 +111,30 @@ export const accountsApi = {
     apiFetch<ConnectionValidation>(`/accounts/${id}/validate`, { method: 'POST' }),
   remove: (id: number) =>
     apiFetch<void>(`/accounts/${id}`, { method: 'DELETE' }),
+};
+
+export const scansApi = {
+  list: () => apiFetch<ScanJob[]>('/scans'),
+  run: (aws_account_id: number) =>
+    apiFetch<ScanJob>('/scans/run', {
+      method: 'POST',
+      body: JSON.stringify({ aws_account_id }),
+    }),
+};
+
+export const findingsApi = {
+  list: (params?: { severity?: string; status?: string; service?: string; search?: string }) => {
+    const qs = new URLSearchParams();
+    if (params?.severity) qs.set('severity', params.severity);
+    if (params?.status) qs.set('status', params.status);
+    if (params?.service) qs.set('service', params.service);
+    if (params?.search) qs.set('search', params.search);
+    const query = qs.toString() ? `?${qs.toString()}` : '';
+    return apiFetch<Finding[]>(`/findings${query}`);
+  },
+  update: (id: number, payload: { status?: FindingStatus; investigation_notes?: string }) =>
+    apiFetch<Finding>(`/findings/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
 };
