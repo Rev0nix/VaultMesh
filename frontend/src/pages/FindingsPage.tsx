@@ -10,7 +10,7 @@ import {
   FileCode2,
   Play,
 } from 'lucide-react';
-import { findingsApi, scansApi } from '../services/api';
+import { findingsApi, remediationApi, scansApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import type { AWSAccount, Finding, FindingStatus } from '../types';
 
@@ -43,6 +43,7 @@ export default function FindingsPage({
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [remediationOutput, setRemediationOutput] = useState<string | null>(null);
 
   const loadFindings = useCallback(async () => {
     setLoading(true);
@@ -82,6 +83,25 @@ export default function FindingsPage({
       await loadFindings();
     } finally {
       setScanning(false);
+    }
+  };
+
+  const handleRemediation = async (dryRun: boolean) => {
+    if (!selectedFinding) return;
+    if (!dryRun && !window.confirm("Confirm safe remediation execution for " + selectedFinding.finding_uid + "?")) {
+      return;
+    }
+    setUpdating(true);
+    try {
+      const res = await remediationApi.execute({
+        finding_id: selectedFinding.id,
+        dry_run: dryRun,
+        confirm: !dryRun,
+      });
+      setRemediationOutput(res.execution_output);
+      await loadFindings();
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -187,6 +207,7 @@ export default function FindingsPage({
                   onClick={() => {
                     setSelectedFinding(f);
                     setNotesDraft(f.investigation_notes || '');
+                    setRemediationOutput(null);
                   }}
                   className={`p-4 rounded-2xl border transition cursor-pointer ${
                     isSelected
@@ -316,7 +337,26 @@ export default function FindingsPage({
                     >
                       <RotateCcw className="w-3.5 h-3.5" /> Reopen
                     </button>
+                    <button
+                      disabled={updating}
+                      onClick={() => handleRemediation(true)}
+                      className="px-3 py-1.5 rounded-xl bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/30 text-xs font-medium cursor-pointer"
+                    >
+                      Simulate Dry-Run
+                    </button>
+                    <button
+                      disabled={updating}
+                      onClick={() => handleRemediation(false)}
+                      className="px-3 py-1.5 rounded-xl bg-blue-500/20 border border-blue-500/30 text-blue-300 hover:bg-blue-500/30 text-xs font-medium cursor-pointer"
+                    >
+                      Confirm &amp; Remediate
+                    </button>
                   </div>
+                  {remediationOutput && (
+                    <pre className="bg-[#070D19] border border-cyan-500/30 rounded-xl p-3 text-[11px] font-mono text-cyan-300 whitespace-pre-wrap">
+                      {remediationOutput}
+                    </pre>
+                  )}
                 </div>
               )}
             </div>

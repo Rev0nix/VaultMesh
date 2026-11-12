@@ -6,10 +6,13 @@ import TopNavbar from './components/TopNavbar';
 import OverviewPage from './pages/OverviewPage';
 import CloudAccountsPage from './pages/CloudAccountsPage';
 import FindingsPage from './pages/FindingsPage';
+import ThreatDetectionPage from './pages/ThreatDetectionPage';
 import IAMAnalyzerPage from './pages/IAMAnalyzerPage';
 import NetworkSecurityPage from './pages/NetworkSecurityPage';
-import ThreatDetectionPage from './pages/ThreatDetectionPage';
-import ModulePlaceholderPage from './pages/ModulePlaceholderPage';
+import CompliancePage from './pages/CompliancePage';
+import AuditLogsPage from './pages/AuditLogsPage';
+import ReportsPage from './pages/ReportsPage';
+import SettingsPage from './pages/SettingsPage';
 import { accountsApi } from './services/api';
 import type { AWSAccount, NavSection } from './types';
 
@@ -87,37 +90,13 @@ function VaultMeshShell() {
       case 'network':
         return <NetworkSecurityPage />;
       case 'compliance':
-        return (
-          <ModulePlaceholderPage
-            title="Compliance Frameworks Mapping"
-            stageNumber={11}
-            description="Informational control mapping for CIS AWS Foundations Benchmark, NIST CSF, and AWS Well-Architected."
-          />
-        );
+        return <CompliancePage />;
       case 'audit':
-        return (
-          <ModulePlaceholderPage
-            title="Immutable Audit Logs"
-            stageNumber={10}
-            description="Chronological security trail of logins, scan triggers, finding status updates, and remediation approvals."
-          />
-        );
+        return <AuditLogsPage />;
       case 'reports':
-        return (
-          <ModulePlaceholderPage
-            title="Executive PDF & JSON Reports"
-            stageNumber={11}
-            description="Generate downloadable security assessment reports with executive summaries, evidence, and remediation steps."
-          />
-        );
+        return <ReportsPage />;
       case 'settings':
-        return (
-          <ModulePlaceholderPage
-            title="Organization & RBAC Settings"
-            stageNumber={10}
-            description="Manage team roles (ADMIN, SECURITY_ANALYST, VIEWER), JWT session policies, and AWS mode settings."
-          />
-        );
+        return <SettingsPage />;
     }
   };
 

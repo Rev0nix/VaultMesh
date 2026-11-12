@@ -155,3 +155,86 @@ export const threatsApi = {
       }
     ),
 };
+
+export const remediationApi = {
+  execute: (payload: { finding_id: number; dry_run: boolean; confirm: boolean }) =>
+    apiFetch<{
+      id: number;
+      finding_uid: string;
+      action_type: string;
+      status: string;
+      command_preview: string;
+      execution_output: string;
+      finding_status: FindingStatus;
+    }>('/remediation/execute', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+};
+
+export const complianceApi = {
+  getSummary: () =>
+    apiFetch<{
+      disclaimer: string;
+      summary: {
+        total_controls: number;
+        passing_controls: number;
+        failing_controls: number;
+        readiness_percentage: number;
+      };
+      controls: {
+        framework: string;
+        control_id: string;
+        title: string;
+        mapped_rules: string[];
+        status: 'PASS' | 'FAIL';
+        violated_rules: string[];
+      }[];
+    }>('/compliance'),
+};
+
+export const auditApi = {
+  getLogs: () =>
+    apiFetch<
+      {
+        id: number;
+        actor_email: string;
+        action: string;
+        target_type: string | null;
+        target_id: string | null;
+        ip_address: string | null;
+        details: Record<string, unknown>;
+        created_at: string;
+      }[]
+    >('/audit/logs'),
+  getTeam: () =>
+    apiFetch<
+      {
+        id: number;
+        email: string;
+        full_name: string;
+        role: string;
+        is_active: boolean;
+        created_at: string;
+      }[]
+    >('/audit/team'),
+};
+
+export const reportsApi = {
+  download: async (fmt: 'json' | 'pdf') => {
+    const token = getStoredToken();
+    const res = await fetch(`${API_BASE_URL}/reports/export?fmt=${fmt}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) throw new Error(`Export failed (${res.status})`);
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `vaultmesh-security-report.${fmt}`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  },
+};
