@@ -138,3 +138,64 @@ export interface DashboardOverview {
     occurred_at: string;
   }[];
 }
+
+export interface IAMPrincipalAnalysis {
+  id: number;
+  name: string;
+  arn: string;
+  principal_type: string;
+  mfa_enabled: boolean | null;
+  trust_principal: string;
+  attached_policies: string[];
+  has_wildcard_admin: boolean;
+  risk_score: number;
+  risk_level: string;
+  issues: string[];
+  recommendations: string[];
+  is_mock: boolean;
+}
+
+export interface IAMAnalysisResponse {
+  summary: {
+    total_principals: number;
+    wildcard_admin_principals: number;
+    users_missing_mfa: number;
+    risky_trust_policies: number;
+  };
+  principals: IAMPrincipalAnalysis[];
+}
+
+export interface NetworkIngressRule {
+  security_group_id: string;
+  security_group_name: string;
+  region: string;
+  vpc_id: string;
+  protocol: string;
+  port_range: string;
+  service_label: string;
+  source_cidr: string;
+  is_public: boolean;
+  risk_level: string;
+  recommendation: string;
+  is_mock: boolean;
+}
+
+export interface NetworkAnalysisResponse {
+  summary: {
+    total_security_groups: number;
+    public_ingress_rules: number;
+    critical_admin_or_db_exposures: number;
+  };
+  security_groups: {
+    id: number;
+    group_id: string;
+    group_name: string;
+    arn: string;
+    region: string;
+    vpc_id: string;
+    total_ingress_rules: number;
+    public_ingress_rules: number;
+    is_mock: boolean;
+  }[];
+  ingress_rules: NetworkIngressRule[];
+}

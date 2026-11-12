@@ -138,3 +138,8 @@ export const findingsApi = {
       body: JSON.stringify(payload),
     }),
 };
+
+export const analyzersApi = {
+  getIam: () => apiFetch<import('../types').IAMAnalysisResponse>('/analyzers/iam'),
+  getNetwork: () => apiFetch<import('../types').NetworkAnalysisResponse>('/analyzers/network'),
+};

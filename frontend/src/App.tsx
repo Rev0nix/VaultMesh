@@ -6,6 +6,8 @@ import TopNavbar from './components/TopNavbar';
 import OverviewPage from './pages/OverviewPage';
 import CloudAccountsPage from './pages/CloudAccountsPage';
 import FindingsPage from './pages/FindingsPage';
+import IAMAnalyzerPage from './pages/IAMAnalyzerPage';
+import NetworkSecurityPage from './pages/NetworkSecurityPage';
 import ModulePlaceholderPage from './pages/ModulePlaceholderPage';
 import { accountsApi } from './services/api';
 import type { AWSAccount, NavSection } from './types';
@@ -81,21 +83,9 @@ function VaultMeshShell() {
           />
         );
       case 'iam':
-        return (
-          <ModulePlaceholderPage
-            title="IAM Least-Privilege Analyzer"
-            stageNumber={8}
-            description="Detect wildcard (*) policies, AdministratorAccess attachment, and risky cross-account trust relationships."
-          />
-        );
+        return <IAMAnalyzerPage />;
       case 'network':
-        return (
-          <ModulePlaceholderPage
-            title="Network & Security Group Analyzer"
-            stageNumber={8}
-            description="Audit 0.0.0.0/0 inbound ingress rules, exposed SSH (22), RDP (3389), and database ports."
-          />
-        );
+        return <NetworkSecurityPage />;
       case 'compliance':
         return (
           <ModulePlaceholderPage
