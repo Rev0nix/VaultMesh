@@ -8,6 +8,7 @@ import CloudAccountsPage from './pages/CloudAccountsPage';
 import FindingsPage from './pages/FindingsPage';
 import IAMAnalyzerPage from './pages/IAMAnalyzerPage';
 import NetworkSecurityPage from './pages/NetworkSecurityPage';
+import ThreatDetectionPage from './pages/ThreatDetectionPage';
 import ModulePlaceholderPage from './pages/ModulePlaceholderPage';
 import { accountsApi } from './services/api';
 import type { AWSAccount, NavSection } from './types';
@@ -76,10 +77,9 @@ function VaultMeshShell() {
         );
       case 'threats':
         return (
-          <ModulePlaceholderPage
-            title="CloudTrail Threat Detection"
-            stageNumber={9}
-            description="Rule-based behavioral detection for brute-force logins, StopLogging tampering, and privilege escalation."
+          <ThreatDetectionPage
+            accounts={accounts}
+            selectedAccountId={selectedAccountId}
           />
         );
       case 'iam':

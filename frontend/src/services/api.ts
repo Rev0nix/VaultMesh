@@ -143,3 +143,15 @@ export const analyzersApi = {
   getIam: () => apiFetch<import('../types').IAMAnalysisResponse>('/analyzers/iam'),
   getNetwork: () => apiFetch<import('../types').NetworkAnalysisResponse>('/analyzers/network'),
 };
+
+export const threatsApi = {
+  list: () => apiFetch<import('../types').ThreatEventItem[]>('/threats'),
+  analyze: (aws_account_id: number) =>
+    apiFetch<{ events_inspected: number; alerts_matched: number; new_alerts_saved: number }>(
+      '/threats/analyze',
+      {
+        method: 'POST',
+        body: JSON.stringify({ aws_account_id }),
+      }
+    ),
+};

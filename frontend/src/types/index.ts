@@ -199,3 +199,20 @@ export interface NetworkAnalysisResponse {
   }[];
   ingress_rules: NetworkIngressRule[];
 }
+
+export interface ThreatEventItem {
+  id: number;
+  aws_account_id: number;
+  event_id: string;
+  event_name: string;
+  event_source: string;
+  actor_arn: string | null;
+  source_ip: string | null;
+  region: string;
+  severity: SeverityLevel;
+  rule_triggered: string;
+  explanation: string;
+  raw_event: Record<string, unknown>;
+  is_mock: boolean;
+  occurred_at: string;
+}
