@@ -1,32 +1,44 @@
-# React + TypeScript + Vite
+# VaultMesh — AWS Cloud Security Posture Management & Threat Detection Platform
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+[![VaultMesh DevSecOps Pipeline](https://github.com/Rev0nix/VaultMesh/actions/workflows/devsecops.yml/badge.svg)](https://github.com/Rev0nix/VaultMesh/actions/workflows/devsecops.yml)
 
-Currently, two official plugins are available:
+> **Secure Your Cloud. Detect Threats. Control Everything.**
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+VaultMesh is a full-stack **Cloud Security Posture Management (CSPM)** and **CloudTrail Threat Detection** platform built with **FastAPI**, **React + TypeScript**, **SQLAlchemy**, and **Terraform**. It connects to AWS accounts via temporary **STS `AssumeRole` + `ExternalId`** credentials (or runs 100% offline in **Sandbox Mock Mode**) to discover cloud resources, detect misconfigurations, analyze IAM blast radius and VPC network exposure, detect suspicious CloudTrail activity, and export executive PDF/JSON security reports.
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Live Links & Repository
 
-## Expanding the Oxlint configuration
+- **GitHub Repository:** [https://github.com/Rev0nix/VaultMesh](https://github.com/Rev0nix/VaultMesh)
+- **Live Web Console (Local / Deployed):** [http://localhost:5173](http://localhost:5173) *(Replace with your deployed Vercel / Render / EC2 URL when hosted)*
+- **Interactive API Docs (Swagger UI):** [http://127.0.0.1:8000/api/v1/docs](http://127.0.0.1:8000/api/v1/docs)
+- **DevSecOps CI/CD Pipeline:** [GitHub Actions Workflows](https://github.com/Rev0nix/VaultMesh/actions)
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+---
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
-```
+## Architecture Overview
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+```text
++-----------------------------------------------------------------------+
+|                FRONTEND (React 18 • TypeScript • Tailwind)            |
+|  Overview • Cloud Accounts • Findings • Threats • IAM • Network       |
+|  Compliance • Audit Logs • PDF/JSON Reports • RBAC Settings           |
++-----------------------------------+-----------------------------------+
+                                    | REST JSON (JWT Bearer Auth)
+                                    v
++-----------------------------------------------------------------------+
+|                    BACKEND API (Python 3.12 • FastAPI)                |
+|  - RBAC Guard (ADMIN / SECURITY_ANALYST / VIEWER) & bcrypt Hashing    |
+|  - Discovery Provider (Mock Sandbox OR Live boto3 STS AssumeRole)     |
+|  - Multi-Service CSPM Scanner & Asymptotic Security Scoring Engine    |
+|  - IAM Blast-Radius Analyzer & VPC Ingress Port Exposure Analyzer     |
+|  - Explainable Rule-Based CloudTrail Threat Detection Engine          |
+|  - Safe Remediation Engine (Dry-Run Default + Confirmation Gate)      |
++-----------------+-----------------------------------+-----------------+
+                  | SQLAlchemy 2.0 ORM                | AWS STS / APIs
+                  v                                   v
++---------------------------------+   +---------------------------------+
+|   SQLite (Dev) / PostgreSQL     |   |   AWS Cloud / Sandbox Mock      |
+|   13 Relational Security Tables |   |   S3 • IAM • EC2 • VPC • Trail  |
++---------------------------------+   +---------------------------------+
