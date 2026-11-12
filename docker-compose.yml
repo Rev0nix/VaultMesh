@@ -1,0 +1,23 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: vaultmesh-backend
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: "development"
+      DATABASE_URL: "sqlite:///./vaultmesh.db"
+      AWS_INTEGRATION_MODE: "mock"
+      BACKEND_CORS_ORIGINS: '["http://localhost:5173"]'
+    volumes:
+      - ./backend:/app
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: vaultmesh-frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend

@@ -20,7 +20,7 @@ const AWS_REGIONS = [
 ];
 
 export default function TopNavbar({
-  accounts,
+  accounts = [],
   selectedAccountId,
   onAccountChange,
   selectedRegion,
