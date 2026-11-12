@@ -37,7 +37,7 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen bg-[#070D19] text-slate-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-[#0E172A] border border-slate-800 rounded-2xl p-8 shadow-2xl">
+      <div className="w-full max-w-lg rounded-2xl border border-slate-800/80 bg-[#0d1424]/95 p-8 sm:p-10 shadow-2xl">
         {/* Brand Header */}
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
@@ -45,7 +45,7 @@ export default function AuthPage() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-white tracking-tight">VaultMesh CSPM</h1>
-            <p className="text-xs text-cyan-400">Secure Your Cloud. Detect Threats. Control Everything.</p>
+            <p className="text-sm text-cyan-400">Secure Your Cloud. Detect Threats. Control Everything.</p>
           </div>
         </div>
 
@@ -54,29 +54,27 @@ export default function AuthPage() {
           <button
             type="button"
             onClick={() => { setMode('login'); setError(null); }}
-            className={`py-2 text-xs font-semibold rounded-lg transition ${
-              mode === 'login'
+            className={`py-3 text-sm font-semibold rounded-lg transition ${mode === 'login'
                 ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
                 : 'text-slate-400 hover:text-slate-200'
-            }`}
+              }`}
           >
             Sign In
           </button>
           <button
             type="button"
             onClick={() => { setMode('register'); setError(null); }}
-            className={`py-2 text-xs font-semibold rounded-lg transition ${
-              mode === 'register'
+            className={`py-3 text-sm font-semibold rounded-lg transition ${mode === 'register'
                 ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
                 : 'text-slate-400 hover:text-slate-200'
-            }`}
+              }`}
           >
             Create Workspace
           </button>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-2">
+          <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-sm flex items-start gap-2">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
@@ -86,7 +84,7 @@ export default function AuthPage() {
           {mode === 'register' && (
             <>
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">Full Name</label>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">Full Name</label>
                 <div className="relative">
                   <UserIcon className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
                   <input
@@ -101,7 +99,7 @@ export default function AuthPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">Organization Name</label>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">Organization Name</label>
                 <div className="relative">
                   <Building2 className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
                   <input
@@ -118,7 +116,7 @@ export default function AuthPage() {
           )}
 
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1.5">Work Email</label>
+            <label className="block text-sm font-medium text-slate-300 mb-1.5">Work Email</label>
             <div className="relative">
               <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
               <input
@@ -133,7 +131,7 @@ export default function AuthPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1.5">Password</label>
+            <label className="block text-sm font-medium text-slate-300 mb-1.5">Password</label>
             <div className="relative">
               <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
               <input
@@ -156,8 +154,8 @@ export default function AuthPage() {
             {submitting
               ? 'Authenticating...'
               : mode === 'login'
-              ? 'Sign In to Console'
-              : 'Initialize Admin Workspace'}
+                ? 'Sign In to Console'
+                : 'Initialize Admin Workspace'}
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>
