@@ -8,6 +8,12 @@ on:
 
 permissions:
   contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
   backend-test-and-sast:
@@ -54,6 +60,12 @@ jobs:
           npm install
           npm run build
 
+      - name: Upload GitHub Pages Artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: frontend/dist
+
   iac-and-secrets-scan:
     name: Checkov IaC & Gitleaks Secret Scan
     runs-on: ubuntu-latest
@@ -72,3 +84,16 @@ jobs:
           framework: terraform
           skip_check: CKV_AWS_355
           soft_fail: false
+
+  deploy-github-pages:
+    name: Deploy Frontend to GitHub Pages
+    if: github.ref == 'refs/heads/main'
+    needs: [frontend-build-check]
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
