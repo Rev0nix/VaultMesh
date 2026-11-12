@@ -1,45 +1,11 @@
-import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from app.api.deps import get_db
-from app.core.database import Base
-from app.main import app
-
-SQLALCHEMY_TEST_DATABASE_URL = "sqlite:///./test_vaultmesh.db"
-engine = create_engine(SQLALCHEMY_TEST_DATABASE_URL, connect_args={"check_same_thread": False})
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-def override_get_db():
-    db = TestingSessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-app.dependency_overrides[get_db] = override_get_db
-
-
-@pytest.fixture(autouse=True)
-def setup_and_teardown_db():
-    Base.metadata.create_all(bind=engine)
-    yield
-    Base.metadata.drop_all(bind=engine)
-
-
-client = TestClient(app)
-
-
-def test_register_login_and_rbac_flow():
+def test_register_login_and_rbac_flow(client):
     # 1. First user in a new org receives ADMIN role automatically
     res_admin = client.post(
         "/api/v1/auth/register",
         json={
             "email": "admin@vaultmesh.io",
-            "full_name": "Revanth",
-            "password": "Strong123!",
+            "full_name": "Revanth Admin",
+            "password": "StrongPassword123!",
             "organization_name": "VaultMesh Lab",
         },
     )
@@ -86,6 +52,7 @@ def test_register_login_and_rbac_flow():
         "/api/v1/auth/login",
         json={"email": "admin@vaultmesh.io", "password": "StrongPassword123!"},
     )
+    assert admin_login.status_code == 200
     admin_token = admin_login.json()["access_token"]
     ok_res = client.get(
         "/api/v1/auth/admin-check",

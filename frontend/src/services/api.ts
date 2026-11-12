@@ -1,4 +1,10 @@
-import type { DashboardOverview, TokenResponse, User } from '../types';
+import type {
+  AWSAccount,
+  ConnectionValidation,
+  DashboardOverview,
+  TokenResponse,
+  User,
+} from '../types';
 
 const API_BASE_URL = 'http://127.0.0.1:8000/api/v1';
 const TOKEN_STORAGE_KEY = 'vaultmesh_access_token';
@@ -39,9 +45,13 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
         message = errorBody.detail[0].msg;
       }
     } catch {
-      // keep fallback HTTP error message
+      // keep fallback
     }
     throw new Error(message);
+  }
+
+  if (response.status === 204) {
+    return undefined as T;
   }
 
   return response.json() as Promise<T>;
@@ -70,4 +80,32 @@ export const authApi = {
 
 export const dashboardApi = {
   getOverview: () => apiFetch<DashboardOverview>('/dashboard/overview'),
+};
+
+export const accountsApi = {
+  list: () => apiFetch<AWSAccount[]>('/accounts'),
+  getOnboardingTemplate: () =>
+    apiFetch<{
+      suggested_role_name: string;
+      generated_external_id: string;
+      trust_policy: object;
+      permissions_policy: object;
+    }>('/accounts/onboarding-template'),
+  create: (payload: {
+    aws_account_id: string;
+    alias: string;
+    is_mock: boolean;
+    role_arn?: string;
+    external_id?: string;
+    default_region: string;
+    regions: string[];
+  }) =>
+    apiFetch<AWSAccount>('/accounts', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  validate: (id: number) =>
+    apiFetch<ConnectionValidation>(`/accounts/${id}/validate`, { method: 'POST' }),
+  remove: (id: number) =>
+    apiFetch<void>(`/accounts/${id}`, { method: 'DELETE' }),
 };

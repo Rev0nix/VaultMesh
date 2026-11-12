@@ -28,6 +28,37 @@ export interface TokenResponse {
   expires_in_minutes: number;
 }
 
+export interface AWSRegion {
+  id: number;
+  region_code: string;
+  is_enabled: boolean;
+}
+
+export interface AWSAccount {
+  id: number;
+  organization_id: number;
+  aws_account_id: string;
+  alias: string;
+  role_arn: string | null;
+  external_id: string | null;
+  default_region: string;
+  is_mock: boolean;
+  connection_status: string;
+  last_synced_at: string | null;
+  created_at: string;
+  regions: AWSRegion[];
+}
+
+export interface ConnectionValidation {
+  account_id: number;
+  aws_account_id: string;
+  is_mock: boolean;
+  status: string;
+  caller_arn: string;
+  message: string;
+  validated_at: string;
+}
+
 export interface DashboardOverview {
   organization_id: number;
   aws_mode: string;

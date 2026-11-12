@@ -1,12 +1,15 @@
 import { Bell, Cloud, Globe, LogOut, Search } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import type { AWSAccount } from '../types';
 
 interface TopNavbarProps {
+  accounts: AWSAccount[];
+  selectedAccountId: number | null;
+  onAccountChange: (id: number) => void;
   selectedRegion: string;
   onRegionChange: (region: string) => void;
   searchQuery: string;
   onSearchChange: (q: string) => void;
-  awsMode: string;
 }
 
 const AWS_REGIONS = [
@@ -17,24 +20,36 @@ const AWS_REGIONS = [
 ];
 
 export default function TopNavbar({
+  accounts,
+  selectedAccountId,
+  onAccountChange,
   selectedRegion,
   onRegionChange,
   searchQuery,
   onSearchChange,
-  awsMode,
 }: TopNavbarProps) {
   const { user, logout } = useAuth();
 
   return (
     <header className="h-16 bg-[#0B1222]/90 backdrop-blur border-b border-slate-800/90 px-6 flex items-center justify-between gap-4 shrink-0">
-      {/* Left: Account & Region Selectors */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2 bg-[#070D19] border border-slate-800 rounded-xl px-3 py-1.5 text-xs">
           <Cloud className="w-3.5 h-3.5 text-cyan-400" />
-          <span className="text-slate-400">Account:</span>
-          <span className="font-mono text-slate-200">
-            {awsMode === 'mock' ? 'Sandbox-Mock (000000000000)' : 'Live AWS Account'}
-          </span>
+          {accounts.length === 0 ? (
+            <span className="font-mono text-slate-400">No Account Connected</span>
+          ) : (
+            <select
+              value={selectedAccountId ?? accounts[0].id}
+              onChange={(e) => onAccountChange(Number(e.target.value))}
+              className="bg-transparent text-slate-200 font-mono focus:outline-none cursor-pointer"
+            >
+              {accounts.map((acc) => (
+                <option key={acc.id} value={acc.id} className="bg-[#0B1222]">
+                  {acc.alias} ({acc.aws_account_id})
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
         <div className="flex items-center gap-2 bg-[#070D19] border border-slate-800 rounded-xl px-3 py-1.5 text-xs">
@@ -53,7 +68,6 @@ export default function TopNavbar({
         </div>
       </div>
 
-      {/* Center: Global Search */}
       <div className="relative max-w-xs w-full hidden md:block">
         <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
         <input
@@ -65,7 +79,6 @@ export default function TopNavbar({
         />
       </div>
 
-      {/* Right: Notifications & Profile */}
       <div className="flex items-center gap-3">
         <button
           title="Notifications"
