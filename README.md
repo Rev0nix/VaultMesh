@@ -8,13 +8,9 @@ VaultMesh is a full-stack **Cloud Security Posture Management (CSPM)** and **Clo
 
 ---
 
-## Live Links & Repository
+## Live Links
 
-- **GitHub Repository:** [https://github.com/Rev0nix/VaultMesh](https://github.com/Rev0nix/VaultMesh)
-- **Live Web Console (Local / Deployed):** [http://localhost:5173](http://localhost:5173) *(Replace with your deployed Vercel / Render / EC2 URL when hosted)*
-- **Interactive API Docs (Swagger UI):** [http://127.0.0.1:8000/api/v1/docs](http://127.0.0.1:8000/api/v1/docs)
-- **DevSecOps CI/CD Pipeline:** [GitHub Actions Workflows](https://github.com/Rev0nix/VaultMesh/actions)
-
+- **Live Web Console:** [https://vaultmesh-api-hxx0.onrender.com](https://vaultmesh-api-hxx0.onrender.com)
 ---
 
 ## Architecture Overview
