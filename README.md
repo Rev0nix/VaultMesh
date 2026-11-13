@@ -10,7 +10,7 @@ VaultMesh is a full-stack **Cloud Security Posture Management (CSPM)** and **Clo
 
 ## Live Links
 
-- **Live Web Console:** [https://vaultmesh-api-hxx0.onrender.com](https://vaultmesh-api-hxx0.onrender.com)
+- **Live Web Console:** [https://rev0nix.github.io/VaultMesh/](https://rev0nix.github.io/VaultMesh/)
 ---
 
 ## Architecture Overview
