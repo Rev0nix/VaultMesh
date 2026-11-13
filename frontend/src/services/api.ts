@@ -9,8 +9,8 @@ import type {
   User,
 } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://vaultmesh-api-hxx0.onrender.com/api/v1';
 const TOKEN_STORAGE_KEY = 'vaultmesh_access_token';
+const USER_STORAGE_KEY = 'vaultmesh_current_user';
 
 export function getStoredToken(): string | null {
   return localStorage.getItem(TOKEN_STORAGE_KEY);
@@ -24,60 +24,213 @@ export function setStoredToken(token: string | null): void {
   }
 }
 
+// 100% Client-Side Mock Implementation for GitHub Pages (No Render backend needed)
 async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const token = getStoredToken();
-  const headers = new Headers(options.headers || {});
-  headers.set('Content-Type', 'application/json');
+  // Simulate network latency
+  await new Promise((resolve) => setTimeout(resolve, 300));
 
-  if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
+  const body = options.body ? JSON.parse(options.body as string) : {};
+
+  if (path.startsWith('/auth/register') || path.startsWith('/auth/login')) {
+    const user: User = {
+      id: 1,
+      email: body.email || 'revanth@vaultmesh.io',
+      full_name: body.full_name || 'Revanth Gowda',
+      organization_name: body.organization_name || 'VaultMesh Cloud Security',
+      role: 'ADMIN',
+      is_active: true,
+      created_at: new Date().toISOString(),
+    };
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+    const tokenRes: TokenResponse = {
+      access_token: 'mock-jwt-token-vaultmesh-2026',
+      token_type: 'bearer',
+      user,
+    };
+    return tokenRes as unknown as T;
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers,
-  });
+  if (path.startsWith('/auth/me')) {
+    const cached = localStorage.getItem(USER_STORAGE_KEY);
+    if (cached) return JSON.parse(cached) as unknown as T;
+    return {
+      id: 1,
+      email: 'revanth@vaultmesh.io',
+      full_name: 'Revanth Gowda',
+      organization_name: 'VaultMesh Cloud Security',
+      role: 'ADMIN',
+      is_active: true,
+      created_at: new Date().toISOString(),
+    } as unknown as T;
+  }
 
-  if (!response.ok) {
-    let message = `API Error (${response.status})`;
-    try {
-      const errorBody = await response.json();
-      if (typeof errorBody.detail === 'string') {
-        message = errorBody.detail;
-      } else if (Array.isArray(errorBody.detail) && errorBody.detail[0]?.msg) {
-        message = errorBody.detail[0].msg;
-      }
-    } catch {
-      // keep fallback
+  if (path.startsWith('/dashboard/overview')) {
+    const overview: DashboardOverview = {
+      total_findings: 14,
+      critical_count: 2,
+      high_count: 4,
+      medium_count: 5,
+      low_count: 3,
+      compliance_readiness: 84.5,
+      active_accounts_count: 2,
+      recent_scans: [
+        { id: 1, aws_account_id: 1, status: 'COMPLETED', findings_count: 14, created_at: new Date().toISOString() }
+      ],
+    };
+    return overview as unknown as T;
+  }
+
+  if (path.startsWith('/accounts')) {
+    if (options.method === 'POST') {
+      const newAcc: AWSAccount = {
+        id: Math.floor(Math.random() * 1000),
+        aws_account_id: body.aws_account_id || '123456789012',
+        alias: body.alias || 'Production AWS',
+        is_mock: true,
+        default_region: body.default_region || 'ap-south-1',
+        regions: body.regions || ['ap-south-1'],
+        created_at: new Date().toISOString(),
+      };
+      return newAcc as unknown as T;
     }
-    throw new Error(message);
+    const accounts: AWSAccount[] = [
+      {
+        id: 1,
+        aws_account_id: '987654321098',
+        alias: 'AWS-Prod-Core',
+        is_mock: true,
+        default_region: 'ap-south-1',
+        regions: ['ap-south-1', 'us-east-1'],
+        created_at: new Date().toISOString(),
+      },
+    ];
+    return accounts as unknown as T;
   }
 
-  if (response.status === 204) {
-    return undefined as T;
+  if (path.includes('/validate')) {
+    const val: ConnectionValidation = {
+      success: true,
+      message: 'AWS STS AssumeRole validation successful (Mock Mode)',
+      account_id: '987654321098',
+      partition: 'aws',
+      arn: 'arn:aws:iam::987654321098:role/VaultMeshScannerRole',
+    };
+    return val as unknown as T;
   }
 
-  return response.json() as Promise<T>;
+  if (path.startsWith('/scans')) {
+    if (options.method === 'POST') {
+      const scan: ScanJob = {
+        id: Math.floor(Math.random() * 1000),
+        aws_account_id: body.aws_account_id || 1,
+        status: 'COMPLETED',
+        findings_count: 14,
+        created_at: new Date().toISOString(),
+      };
+      return scan as unknown as T;
+    }
+    const scans: ScanJob[] = [
+      { id: 1, aws_account_id: 1, status: 'COMPLETED', findings_count: 14, created_at: new Date().toISOString() }
+    ];
+    return scans as unknown as T;
+  }
+
+  if (path.startsWith('/findings')) {
+    const findings: Finding[] = [
+      {
+        id: 1,
+        finding_uid: 'CKV_AWS_20',
+        service: 'S3',
+        title: 'S3 Bucket has public read access enabled',
+        description: 'The S3 bucket policy allows public read access to stored objects.',
+        severity: 'CRITICAL',
+        status: 'OPEN',
+        resource_id: 'arn:aws:s3:::vaultmesh-audit-logs-prod',
+        region: 'ap-south-1',
+        framework: 'CIS AWS Foundations',
+        remediation_guidance: 'Disable public block settings and restrict bucket ACLs.',
+        created_at: new Date().toISOString(),
+      },
+      {
+        id: 2,
+        finding_uid: 'CKV_AWS_18',
+        service: 'S3',
+        title: 'S3 Bucket access logging is not enabled',
+        description: 'Target bucket does not have server access logging configured.',
+        severity: 'MEDIUM',
+        status: 'OPEN',
+        resource_id: 'arn:aws:s3:::vaultmesh-data-bucket',
+        region: 'ap-south-1',
+        framework: 'CIS AWS Foundations',
+        remediation_guidance: 'Enable S3 access logging pointing to a secure logging bucket.',
+        created_at: new Date().toISOString(),
+      },
+    ];
+    return findings as unknown as T;
+  }
+
+  if (path.startsWith('/analyzers/iam')) {
+    return {
+      total_principals: 12,
+      overprivileged_count: 3,
+      admin_roles_count: 2,
+      risk_score: 72.4,
+      principals: [
+        { name: 'DeployPipelineRole', type: 'IAM Role', policy_count: 3, is_overprivileged: true, risk_level: 'HIGH' }
+      ]
+    } as unknown as T;
+  }
+
+  if (path.startsWith('/analyzers/network')) {
+    return {
+      total_security_groups: 8,
+      public_sg_count: 1,
+      unrestricted_ssh_count: 1,
+      risk_score: 65.0,
+      rules: [
+        { sg_id: 'sg-0123456789abcdef0', port_range: '22', cidr: '0.0.0.0/0', risk: 'CRITICAL' }
+      ]
+    } as unknown as T;
+  }
+
+  if (path.startsWith('/threats')) {
+    if (options.method === 'POST') {
+      return { events_inspected: 154, alerts_matched: 2, new_alerts_saved: 2 } as unknown as T;
+    }
+    return [
+      { id: 1, alert_type: 'UnauthorizedAPICall', severity: 'HIGH', source_ip: '198.51.100.42', description: 'Suspicious AssumeRole attempt from unknown IP', timestamp: new Date().toISOString() }
+    ] as unknown as T;
+  }
+
+  if (path.startsWith('/compliance')) {
+    return {
+      disclaimer: 'Calculated from automated CSPM checks',
+      summary: { total_controls: 20, passing_controls: 17, failing_controls: 3, readiness_percentage: 85.0 },
+      controls: [
+        { framework: 'CIS AWS', control_id: '1.1', title: 'Maintain root account security', mapped_rules: ['CKV_AWS_1'], status: 'PASS', violated_rules: [] },
+        { framework: 'CIS AWS', control_id: '2.1', title: 'S3 bucket encryption', mapped_rules: ['CKV_AWS_20'], status: 'FAIL', violated_rules: ['CKV_AWS_20'] },
+      ]
+    } as unknown as T;
+  }
+
+  if (path.startsWith('/audit/logs')) {
+    return [
+      { id: 1, actor_email: 'revanth@vaultmesh.io', action: 'WORKSPACE_INITIALIZED', target_type: 'Workspace', target_id: '1', ip_address: '127.0.0.1', details: {}, created_at: new Date().toISOString() }
+    ] as unknown as T;
+  }
+
+  if (path.startsWith('/audit/team')) {
+    return [
+      { id: 1, email: 'revanth@vaultmesh.io', full_name: 'Revanth Gowda', role: 'ADMIN', is_active: true, created_at: new Date().toISOString() }
+    ] as unknown as T;
+  }
+
+  return {} as T;
 }
 
 export const authApi = {
-  register: (payload: {
-    email: string;
-    full_name: string;
-    password: string;
-    organization_name: string;
-  }) =>
-    apiFetch<User>('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
-
-  login: (payload: { email: string; password: string }) =>
-    apiFetch<TokenResponse>('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
-
+  register: (payload: any) => apiFetch<TokenResponse>('/auth/register', { method: 'POST', body: JSON.stringify(payload) }),
+  login: (payload: any) => apiFetch<TokenResponse>('/auth/login', { method: 'POST', body: JSON.stringify(payload) }),
   me: () => apiFetch<User>('/auth/me'),
 };
 
@@ -87,154 +240,47 @@ export const dashboardApi = {
 
 export const accountsApi = {
   list: () => apiFetch<AWSAccount[]>('/accounts'),
-  getOnboardingTemplate: () =>
-    apiFetch<{
-      suggested_role_name: string;
-      generated_external_id: string;
-      trust_policy: object;
-      permissions_policy: object;
-    }>('/accounts/onboarding-template'),
-  create: (payload: {
-    aws_account_id: string;
-    alias: string;
-    is_mock: boolean;
-    role_arn?: string;
-    external_id?: string;
-    default_region: string;
-    regions: string[];
-  }) =>
-    apiFetch<AWSAccount>('/accounts', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
-  validate: (id: number) =>
-    apiFetch<ConnectionValidation>(`/accounts/${id}/validate`, { method: 'POST' }),
-  remove: (id: number) =>
-    apiFetch<void>(`/accounts/${id}`, { method: 'DELETE' }),
+  getOnboardingTemplate: () => apiFetch<any>('/accounts/onboarding-template'),
+  create: (payload: any) => apiFetch<AWSAccount>('/accounts', { method: 'POST', body: JSON.stringify(payload) }),
+  validate: (id: number) => apiFetch<ConnectionValidation>(`/accounts/${id}/validate`, { method: 'POST' }),
+  remove: (id: number) => apiFetch<void>(`/accounts/${id}`, { method: 'DELETE' }),
 };
 
 export const scansApi = {
   list: () => apiFetch<ScanJob[]>('/scans'),
-  run: (aws_account_id: number) =>
-    apiFetch<ScanJob>('/scans/run', {
-      method: 'POST',
-      body: JSON.stringify({ aws_account_id }),
-    }),
+  run: (aws_account_id: number) => apiFetch<ScanJob>('/scans/run', { method: 'POST', body: JSON.stringify({ aws_account_id }) }),
 };
 
 export const findingsApi = {
-  list: (params?: { severity?: string; status?: string; service?: string; search?: string }) => {
-    const qs = new URLSearchParams();
-    if (params?.severity) qs.set('severity', params.severity);
-    if (params?.status) qs.set('status', params.status);
-    if (params?.service) qs.set('service', params.service);
-    if (params?.search) qs.set('search', params.search);
-    const query = qs.toString() ? `?${qs.toString()}` : '';
-    return apiFetch<Finding[]>(`/findings${query}`);
-  },
-  update: (id: number, payload: { status?: FindingStatus; investigation_notes?: string }) =>
-    apiFetch<Finding>(`/findings/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(payload),
-    }),
+  list: (params?: any) => apiFetch<Finding[]>('/findings'),
+  update: (id: number, payload: any) => apiFetch<Finding>(`/findings/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }),
 };
 
 export const analyzersApi = {
-  getIam: () => apiFetch<import('../types').IAMAnalysisResponse>('/analyzers/iam'),
-  getNetwork: () => apiFetch<import('../types').NetworkAnalysisResponse>('/analyzers/network'),
+  getIam: () => apiFetch<any>('/analyzers/iam'),
+  getNetwork: () => apiFetch<any>('/analyzers/network'),
 };
 
 export const threatsApi = {
-  list: () => apiFetch<import('../types').ThreatEventItem[]>('/threats'),
-  analyze: (aws_account_id: number) =>
-    apiFetch<{ events_inspected: number; alerts_matched: number; new_alerts_saved: number }>(
-      '/threats/analyze',
-      {
-        method: 'POST',
-        body: JSON.stringify({ aws_account_id }),
-      }
-    ),
+  list: () => apiFetch<any[]>('/threats'),
+  analyze: (aws_account_id: number) => apiFetch<any>('/threats/analyze', { method: 'POST', body: JSON.stringify({ aws_account_id }) }),
 };
 
 export const remediationApi = {
-  execute: (payload: { finding_id: number; dry_run: boolean; confirm: boolean }) =>
-    apiFetch<{
-      id: number;
-      finding_uid: string;
-      action_type: string;
-      status: string;
-      command_preview: string;
-      execution_output: string;
-      finding_status: FindingStatus;
-    }>('/remediation/execute', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
+  execute: (payload: any) => apiFetch<any>('/remediation/execute', { method: 'POST', body: JSON.stringify(payload) }),
 };
 
 export const complianceApi = {
-  getSummary: () =>
-    apiFetch<{
-      disclaimer: string;
-      summary: {
-        total_controls: number;
-        passing_controls: number;
-        failing_controls: number;
-        readiness_percentage: number;
-      };
-      controls: {
-        framework: string;
-        control_id: string;
-        title: string;
-        mapped_rules: string[];
-        status: 'PASS' | 'FAIL';
-        violated_rules: string[];
-      }[];
-    }>('/compliance'),
+  getSummary: () => apiFetch<any>('/compliance'),
 };
 
 export const auditApi = {
-  getLogs: () =>
-    apiFetch<
-      {
-        id: number;
-        actor_email: string;
-        action: string;
-        target_type: string | null;
-        target_id: string | null;
-        ip_address: string | null;
-        details: Record<string, unknown>;
-        created_at: string;
-      }[]
-    >('/audit/logs'),
-  getTeam: () =>
-    apiFetch<
-      {
-        id: number;
-        email: string;
-        full_name: string;
-        role: string;
-        is_active: boolean;
-        created_at: string;
-      }[]
-    >('/audit/team'),
+  getLogs: () => apiFetch<any[]>('/audit/logs'),
+  getTeam: () => apiFetch<any[]>('/audit/team'),
 };
 
 export const reportsApi = {
   download: async (fmt: 'json' | 'pdf') => {
-    const token = getStoredToken();
-    const res = await fetch(`${API_BASE_URL}/reports/export?fmt=${fmt}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
-    if (!res.ok) throw new Error(`Export failed (${res.status})`);
-    const blob = await res.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `vaultmesh-security-report.${fmt}`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    window.URL.revokeObjectURL(url);
+    alert(`[Demo Mode] Successfully generated and downloaded vaultmesh-security-report.${fmt}`);
   },
 };
