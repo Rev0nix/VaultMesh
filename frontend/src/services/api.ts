@@ -3,10 +3,10 @@ import type {
   ConnectionValidation,
   DashboardOverview,
   Finding,
-  FindingStatus,
   ScanJob,
   TokenResponse,
   User,
+  AWSRegion,
 } from '../types';
 
 const TOKEN_STORAGE_KEY = 'vaultmesh_access_token';
@@ -24,11 +24,8 @@ export function setStoredToken(token: string | null): void {
   }
 }
 
-// 100% Client-Side Mock Implementation for GitHub Pages (No Render backend needed)
 async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
-  // Simulate network latency
-  await new Promise((resolve) => setTimeout(resolve, 300));
-
+  await new Promise((resolve) => setTimeout(resolve, 200));
   const body = options.body ? JSON.parse(options.body as string) : {};
 
   if (path.startsWith('/auth/register') || path.startsWith('/auth/login')) {
@@ -36,7 +33,7 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
       id: 1,
       email: body.email || 'revanth@vaultmesh.io',
       full_name: body.full_name || 'Revanth Gowda',
-      organization_name: body.organization_name || 'VaultMesh Cloud Security',
+      organization_id: 1,
       role: 'ADMIN',
       is_active: true,
       created_at: new Date().toISOString(),
@@ -45,7 +42,6 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
     const tokenRes: TokenResponse = {
       access_token: 'mock-jwt-token-vaultmesh-2026',
       token_type: 'bearer',
-      user,
     };
     return tokenRes as unknown as T;
   }
@@ -57,7 +53,7 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
       id: 1,
       email: 'revanth@vaultmesh.io',
       full_name: 'Revanth Gowda',
-      organization_name: 'VaultMesh Cloud Security',
+      organization_id: 1,
       role: 'ADMIN',
       is_active: true,
       created_at: new Date().toISOString(),
@@ -66,16 +62,11 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
 
   if (path.startsWith('/dashboard/overview')) {
     const overview: DashboardOverview = {
-      total_findings: 14,
-      critical_count: 2,
-      high_count: 4,
-      medium_count: 5,
-      low_count: 3,
-      compliance_readiness: 84.5,
-      active_accounts_count: 2,
-      recent_scans: [
-        { id: 1, aws_account_id: 1, status: 'COMPLETED', findings_count: 14, created_at: new Date().toISOString() }
-      ],
+      total_scans: 1,
+      active_accounts: 1,
+      open_findings: 14,
+      critical_findings: 2,
+      compliance_score: 84.5,
     };
     return overview as unknown as T;
   }
@@ -84,24 +75,32 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
     if (options.method === 'POST') {
       const newAcc: AWSAccount = {
         id: Math.floor(Math.random() * 1000),
+        organization_id: 1,
         aws_account_id: body.aws_account_id || '123456789012',
         alias: body.alias || 'Production AWS',
         is_mock: true,
-        default_region: body.default_region || 'ap-south-1',
-        regions: body.regions || ['ap-south-1'],
-        created_at: new Date().toISOString(),
+        role_arn: 'arn:aws:iam::123456789012:role/VaultMeshScannerRole',
+        external_id: 'mock-external-id',
+        default_region: (body.default_region || 'ap-south-1') as AWSRegion,
+        regions: (body.regions || ['ap-south-1']) as AWSRegion[],
+        connection_status: 'CONNECTED',
+        last_synced_at: new Date().toISOString(),
       };
       return newAcc as unknown as T;
     }
     const accounts: AWSAccount[] = [
       {
         id: 1,
+        organization_id: 1,
         aws_account_id: '987654321098',
         alias: 'AWS-Prod-Core',
         is_mock: true,
-        default_region: 'ap-south-1',
-        regions: ['ap-south-1', 'us-east-1'],
-        created_at: new Date().toISOString(),
+        role_arn: 'arn:aws:iam::987654321098:role/VaultMeshScannerRole',
+        external_id: 'mock-external-id',
+        default_region: 'ap-south-1' as AWSRegion,
+        regions: ['ap-south-1' as AWSRegion, 'us-east-1' as AWSRegion],
+        connection_status: 'CONNECTED',
+        last_synced_at: new Date().toISOString(),
       },
     ];
     return accounts as unknown as T;
@@ -111,7 +110,7 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
     const val: ConnectionValidation = {
       success: true,
       message: 'AWS STS AssumeRole validation successful (Mock Mode)',
-      account_id: '987654321098',
+      account_id: 1,
       partition: 'aws',
       arn: 'arn:aws:iam::987654321098:role/VaultMeshScannerRole',
     };
@@ -125,12 +124,11 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
         aws_account_id: body.aws_account_id || 1,
         status: 'COMPLETED',
         findings_count: 14,
-        created_at: new Date().toISOString(),
       };
       return scan as unknown as T;
     }
     const scans: ScanJob[] = [
-      { id: 1, aws_account_id: 1, status: 'COMPLETED', findings_count: 14, created_at: new Date().toISOString() }
+      { id: 1, aws_account_id: 1, status: 'COMPLETED', findings_count: 14 }
     ];
     return scans as unknown as T;
   }
@@ -140,7 +138,6 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
       {
         id: 1,
         finding_uid: 'CKV_AWS_20',
-        service: 'S3',
         title: 'S3 Bucket has public read access enabled',
         description: 'The S3 bucket policy allows public read access to stored objects.',
         severity: 'CRITICAL',
@@ -149,12 +146,10 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
         region: 'ap-south-1',
         framework: 'CIS AWS Foundations',
         remediation_guidance: 'Disable public block settings and restrict bucket ACLs.',
-        created_at: new Date().toISOString(),
       },
       {
         id: 2,
         finding_uid: 'CKV_AWS_18',
-        service: 'S3',
         title: 'S3 Bucket access logging is not enabled',
         description: 'Target bucket does not have server access logging configured.',
         severity: 'MEDIUM',
@@ -163,7 +158,6 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
         region: 'ap-south-1',
         framework: 'CIS AWS Foundations',
         remediation_guidance: 'Enable S3 access logging pointing to a secure logging bucket.',
-        created_at: new Date().toISOString(),
       },
     ];
     return findings as unknown as T;
@@ -175,9 +169,7 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
       overprivileged_count: 3,
       admin_roles_count: 2,
       risk_score: 72.4,
-      principals: [
-        { name: 'DeployPipelineRole', type: 'IAM Role', policy_count: 3, is_overprivileged: true, risk_level: 'HIGH' }
-      ]
+      principals: []
     } as unknown as T;
   }
 
@@ -187,9 +179,7 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
       public_sg_count: 1,
       unrestricted_ssh_count: 1,
       risk_score: 65.0,
-      rules: [
-        { sg_id: 'sg-0123456789abcdef0', port_range: '22', cidr: '0.0.0.0/0', risk: 'CRITICAL' }
-      ]
+      rules: []
     } as unknown as T;
   }
 
@@ -197,9 +187,7 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
     if (options.method === 'POST') {
       return { events_inspected: 154, alerts_matched: 2, new_alerts_saved: 2 } as unknown as T;
     }
-    return [
-      { id: 1, alert_type: 'UnauthorizedAPICall', severity: 'HIGH', source_ip: '198.51.100.42', description: 'Suspicious AssumeRole attempt from unknown IP', timestamp: new Date().toISOString() }
-    ] as unknown as T;
+    return [] as unknown as T;
   }
 
   if (path.startsWith('/compliance')) {
@@ -214,15 +202,11 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
   }
 
   if (path.startsWith('/audit/logs')) {
-    return [
-      { id: 1, actor_email: 'revanth@vaultmesh.io', action: 'WORKSPACE_INITIALIZED', target_type: 'Workspace', target_id: '1', ip_address: '127.0.0.1', details: {}, created_at: new Date().toISOString() }
-    ] as unknown as T;
+    return [] as unknown as T;
   }
 
   if (path.startsWith('/audit/team')) {
-    return [
-      { id: 1, email: 'revanth@vaultmesh.io', full_name: 'Revanth Gowda', role: 'ADMIN', is_active: true, created_at: new Date().toISOString() }
-    ] as unknown as T;
+    return [] as unknown as T;
   }
 
   return {} as T;
@@ -252,8 +236,13 @@ export const scansApi = {
 };
 
 export const findingsApi = {
-  list: (params?: any) => apiFetch<Finding[]>('/findings'),
+  list: (_params?: any) => apiFetch<Finding[]>('/findings'),
   update: (id: number, payload: any) => apiFetch<Finding>(`/findings/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }),
+};
+
+export.analyzersApi = {
+  getIam: () => apiFetch<any>('/analyzers/iam'),
+  getNetwork: () => apiFetch<any>('/analyzers/network'),
 };
 
 export const analyzersApi = {
