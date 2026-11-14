@@ -1,23 +1,62 @@
+version: '3.8'
+
 services:
+  db:
+    image: postgres:15-alpine
+    container_name: vaultmesh_postgres
+    environment:
+      POSTGRES_USER: vaultmesh_admin
+      POSTGRES_PASSWORD: secure_password_2026
+      POSTGRES_DB: vaultmesh_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - vaultmesh_net
+
+  redis:
+    image: redis:7-alpine
+    container_name: vaultmesh_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - vaultmesh_net
+
   backend:
-    build:
-      context: ./backend
-    container_name: vaultmesh-backend
+    build: ./backend
+    container_name: vaultmesh_fastapi_backend
+    environment:
+      DATABASE_URL: postgresql://vaultmesh_admin:secure_password_2026@db:5432/vaultmesh_db
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: super-secret-jwt-major-project-key-2026
+      BACKEND_CORS_ORIGINS: '["https://rev0nix.github.io","http://localhost:5173","http://localhost:3000"]'
     ports:
       - "8000:8000"
-    environment:
-      APP_ENV: "development"
-      DATABASE_URL: "sqlite:///./vaultmesh.db"
-      AWS_INTEGRATION_MODE: "mock"
-      BACKEND_CORS_ORIGINS: '["http://localhost:5173"]'
-    volumes:
-      - ./backend:/app
-
-  frontend:
-    build:
-      context: ./frontend
-    container_name: vaultmesh-frontend
-    ports:
-      - "5173:5173"
     depends_on:
-      - backend
+      - db
+      - redis
+    networks:
+      - vaultmesh_net
+
+  celery_worker:
+    build: ./backend
+    container_name: vaultmesh_celery_worker
+    command: celery -A app.worker.celery_app worker --loglevel=info
+    environment:
+      DATABASE_URL: postgresql://vaultmesh_admin:secure_password_2026@db:5432/vaultmesh_db
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    networks:
+      - vaultmesh_net
+
+volumes:
+  postgres_data:
+
+networks:
+  vaultmesh_net:
+    driver: bridge
+
+    

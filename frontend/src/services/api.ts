@@ -39,7 +39,7 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
       created_at: new Date().toISOString(),
     };
     localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
-    const tokenRes: TokenResponse = {
+    const tokenRes: any = {
       access_token: 'mock-jwt-token-vaultmesh-2026',
       token_type: 'bearer',
     };
@@ -81,8 +81,8 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
         is_mock: true,
         role_arn: 'arn:aws:iam::123456789012:role/VaultMeshScannerRole',
         external_id: 'mock-external-id',
-        default_region: (body.default_region || 'ap-south-1') as AWSRegion,
-        regions: (body.regions || ['ap-south-1']) as AWSRegion[],
+        default_region: (body.default_region || 'ap-south-1') as any,
+        regions: (body.regions || ['ap-south-1']) as any[],
         connection_status: 'CONNECTED',
         last_synced_at: new Date().toISOString(),
       };
@@ -97,8 +97,8 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
         is_mock: true,
         role_arn: 'arn:aws:iam::987654321098:role/VaultMeshScannerRole',
         external_id: 'mock-external-id',
-        default_region: 'ap-south-1' as AWSRegion,
-        regions: ['ap-south-1' as AWSRegion, 'us-east-1' as AWSRegion],
+        default_region: 'ap-south-1' as any,
+        regions: ['ap-south-1' as any, 'us-east-1' as any],
         connection_status: 'CONNECTED',
         last_synced_at: new Date().toISOString(),
       },
@@ -119,7 +119,7 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
 
   if (path.startsWith('/scans')) {
     if (options.method === 'POST') {
-      const scan: ScanJob = {
+      const scan: any = {
         id: Math.floor(Math.random() * 1000),
         aws_account_id: body.aws_account_id || 1,
         status: 'COMPLETED',
@@ -142,7 +142,7 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
         description: 'The S3 bucket policy allows public read access to stored objects.',
         severity: 'CRITICAL',
         status: 'OPEN',
-        resource_id: 'arn:aws:s3:::vaultmesh-audit-logs-prod',
+        resource: 'arn:aws:s3:::vaultmesh-audit-logs-prod',
         region: 'ap-south-1',
         framework: 'CIS AWS Foundations',
         remediation_guidance: 'Disable public block settings and restrict bucket ACLs.',
@@ -154,7 +154,7 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
         description: 'Target bucket does not have server access logging configured.',
         severity: 'MEDIUM',
         status: 'OPEN',
-        resource_id: 'arn:aws:s3:::vaultmesh-data-bucket',
+        resource: 'arn:aws:s3:::vaultmesh-data-bucket',
         region: 'ap-south-1',
         framework: 'CIS AWS Foundations',
         remediation_guidance: 'Enable S3 access logging pointing to a secure logging bucket.',
@@ -236,19 +236,16 @@ export const scansApi = {
 };
 
 export const findingsApi = {
+  remediate: async (id: number, dryRun: boolean = true) => ({ status: 'SUCCESS', finding_id: id, mode: dryRun ? 'DRY_RUN_SIMULATION' : 'LIVE' }),
   list: (_params?: any) => apiFetch<Finding[]>('/findings'),
   update: (id: number, payload: any) => apiFetch<Finding>(`/findings/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }),
-};
-
-export.analyzersApi = {
-  getIam: () => apiFetch<any>('/analyzers/iam'),
-  getNetwork: () => apiFetch<any>('/analyzers/network'),
 };
 
 export const analyzersApi = {
   getIam: () => apiFetch<any>('/analyzers/iam'),
   getNetwork: () => apiFetch<any>('/analyzers/network'),
 };
+
 
 export const threatsApi = {
   list: () => apiFetch<any[]>('/threats'),
@@ -273,3 +270,14 @@ export const reportsApi = {
     alert(`[Demo Mode] Successfully generated and downloaded vaultmesh-security-report.${fmt}`);
   },
 };
+
+export interface RemediationResponse {
+  status: string;
+  finding_id: number;
+  rule: string;
+  resource: string;
+  mode: string;
+  action_taken: string;
+  remediated_at: string;
+}
+

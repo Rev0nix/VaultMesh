@@ -49,7 +49,7 @@ export default function CompliancePage() {
         <h2 className="text-sm font-semibold text-white mb-2 flex items-center gap-2">
           <Scale className="w-4 h-4 text-cyan-400" /> Mapped Controls
         </h2>
-        {data.controls.map((c) => (
+        {data.controls.map((c: any) => (
           <div
             key={`${c.framework}-${c.control_id}`}
             className="p-4 rounded-xl bg-[#070D19] border border-slate-800 flex flex-wrap items-center justify-between gap-4"

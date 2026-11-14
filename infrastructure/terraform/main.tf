@@ -1,119 +1,75 @@
-data "aws_caller_identity" "current" {}
-
-# 1. Least-Privilege Read-Only IAM Role for VaultMesh STS AssumeRole
-resource "aws_iam_role" "vaultmesh_audit_role" {
-  name        = "VaultMeshSecurityAuditRole"
-  description = "Least-privilege read-only role assumed by VaultMesh CSPM via STS ExternalId"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          AWS = var.trusted_principal_arn
-        }
-        Action = "sts:AssumeRole"
-        Condition = {
-          StringEquals = {
-            "sts:ExternalId" = var.external_id
-          }
-        }
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy" "vaultmesh_readonly_policy" {
-  #checkov:skip=CKV_AWS_355:Read-only Describe/List inventory actions require wildcard resource scope across AWS accounts
-  name = "VaultMeshCSPMReadOnlyPolicy"
-  role = aws_iam_role.vaultmesh_audit_role.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid    = "VaultMeshPostureAndTelemetryRead"
-        Effect = "Allow"
-        Action = [
-          "s3:ListAllMyBuckets",
-          "s3:GetBucketPublicAccessBlock",
-          "s3:GetBucketEncryption",
-          "s3:GetBucketVersioning",
-          "s3:GetBucketPolicyStatus",
-          "ec2:DescribeInstances",
-          "ec2:DescribeSecurityGroups",
-          "ec2:DescribeVolumes",
-          "iam:GetAccountSummary",
-          "iam:ListUsers",
-          "iam:ListRoles",
-          "iam:ListPolicies",
-          "iam:GetPolicyVersion",
-          "iam:ListAttachedUserPolicies",
-          "iam:ListAttachedRolePolicies",
-          "cloudtrail:DescribeTrails",
-          "cloudtrail:GetTrailStatus",
-          "cloudtrail:LookupEvents"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
-}
-
-# 2. Optional Encrypted S3 Audit Storage (Disabled by default for ₹0 dev budget)
-resource "aws_s3_bucket" "audit_logs" {
-  #checkov:skip=CKV_AWS_144:Cross-region replication is optional to avoid cross-region data transfer charges
-  #checkov:skip=CKV_AWS_145:SSE-AES256 is used by default to avoid KMS CMK monthly charges
-  #checkov:skip=CKV_AWS_18:Server access logging target bucket is omitted to prevent recursive log bucket provisioning
-  #checkov:skip=CKV2_AWS_62:S3 event notifications are configured separately when EventBridge integration is enabled
-  count  = var.enable_cloudtrail_bucket ? 1 : 0
-  bucket = "vaultmesh-audit-logs-${data.aws_caller_identity.current.account_id}-${var.aws_region}"
-}
-
-resource "aws_s3_bucket_public_access_block" "audit_logs_block" {
-  count                   = var.enable_cloudtrail_bucket ? 1 : 0
-  bucket                  = aws_s3_bucket.audit_logs[0].id
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
-}
-
-resource "aws_s3_bucket_server_side_encryption_configuration" "audit_logs_enc" {
-  count  = var.enable_cloudtrail_bucket ? 1 : 0
-  bucket = aws_s3_bucket.audit_logs[0].id
-
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
+terraform {
+  required_version = ">= 1.0.0"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
     }
   }
 }
 
-resource "aws_s3_bucket_versioning" "audit_logs_ver" {
-  count  = var.enable_cloudtrail_bucket ? 1 : 0
-  bucket = aws_s3_bucket.audit_logs[0].id
+provider "aws" {
+  region = var.aws_region
+}
 
-  versioning_configuration {
-    status = "Enabled"
+variable "aws_region" {
+  type    = string
+  default = "ap-south-1"
+}
+
+# 1. VPC for VaultMesh Enterprise Deployment
+resource "aws_vpc" "vaultmesh_vpc" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+
+  tags = {
+    Name        = "vaultmesh-production-vpc"
+    Environment = "MajorProject"
   }
 }
 
-resource "aws_s3_bucket_lifecycle_configuration" "audit_logs_lifecycle" {
-  count  = var.enable_cloudtrail_bucket ? 1 : 0
-  bucket = aws_s3_bucket.audit_logs[0].id
+# 2. Public Subnet
+resource "aws_subnet" "vaultmesh_subnet" {
+  vpc_id                  = aws_vpc.vaultmesh_vpc.id
+  cidr_block              = "10.0.1.0/24"
+  map_public_ip_on_launch = true
 
-  rule {
-    id     = "expire-old-audit-logs"
-    status = "Enabled"
-
-    abort_incomplete_multipart_upload {
-      days_after_initiation = 7
-    }
-
-    expiration {
-      days = 90
-    }
+  tags = {
+    Name = "vaultmesh-public-subnet"
   }
+}
+
+# 3. Security Group for CSPM Scanner & Backend
+resource "aws_security_group" "vaultmesh_sg" {
+  name        = "vaultmesh-backend-sg"
+  description = "Security group for VaultMesh container nodes"
+  vpc_id      = aws_vpc.vaultmesh_vpc.id
+
+  ingress {
+    from_port   = 8000
+    to_port     = 8000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow inbound API traffic"
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "vaultmesh-sg"
+  }
+}
+
+output "vpc_id" {
+  value = aws_vpc.vaultmesh_vpc.id
+}
+
+output "security_group_id" {
+  value = aws_security_group.vaultmesh_sg.id
 }

@@ -45,6 +45,20 @@ export default function FindingsPage({
   const [updating, setUpdating] = useState(false);
   const [remediationOutput, setRemediationOutput] = useState<string | null>(null);
 
+  const [remediatingId, setRemediatingId] = useState<number | null>(null);
+
+  const handleAutoRemediate = async (findingId: number) => {
+    setRemediatingId(findingId);
+    try {
+      const res = await (findingsApi as any).remediate(findingId, true);
+      setFindings((prev) =>
+        prev.map((f) => (f.id === findingId ? { ...f, status: 'RESOLVED' as FindingStatus } : f))
+      );
+    } finally {
+      setRemediatingId(null);
+    }
+  };
+
   const loadFindings = useCallback(async () => {
     setLoading(true);
     try {
@@ -209,18 +223,16 @@ export default function FindingsPage({
                     setNotesDraft(f.investigation_notes || '');
                     setRemediationOutput(null);
                   }}
-                  className={`p-4 rounded-2xl border transition cursor-pointer ${
-                    isSelected
-                      ? 'bg-cyan-500/10 border-cyan-500/40'
-                      : 'bg-[#0E172A] border-slate-800 hover:border-slate-700'
-                  }`}
+                  className={`p-4 rounded-2xl border transition cursor-pointer ${isSelected
+                    ? 'bg-cyan-500/10 border-cyan-500/40'
+                    : 'bg-[#0E172A] border-slate-800 hover:border-slate-700'
+                    }`}
                 >
                   <div className="flex items-center justify-between gap-2 mb-1.5">
                     <div className="flex items-center gap-2">
                       <span
-                        className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
-                          SEVERITY_BADGE[f.severity] || SEVERITY_BADGE.INFO
-                        }`}
+                        className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${SEVERITY_BADGE[f.severity] || SEVERITY_BADGE.INFO
+                          }`}
                       >
                         {f.severity}
                       </span>
@@ -242,6 +254,16 @@ export default function FindingsPage({
                 </div>
               );
             })}
+            {f.status === 'OPEN' && (
+              <button
+                onClick={() => handleAutoRemediate(f.id)}
+                disabled={remediatingId === f.id}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 transition"
+              >
+                <Play className="w-3 h-3" />
+                {remediatingId === f.id ? 'Fixing...' : 'Auto-Remediate'}
+              </button>
+            )}
           </div>
 
           {/* Right Inspector Drawer */}
